@@ -1,0 +1,69 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url = uri("https://packages.confluent.io/maven/")
+        }
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+        maven {
+            url = uri("https://jitpack.io")
+        }
+    }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id "com.google.protobuf" version "0.8.15"
+    id "com.github.imflog.kafka-schema-registry-gradle-plugin" version "1.1.1"
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.0.0"
+}
+
+sourceCompatibility = JavaVersion.VERSION_14
+targetCompatibility = JavaVersion.VERSION_14
+
+group 'io.confluent'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://packages.confluent.io/maven/")
+    }
+
+    maven {
+        url = uri("https://jitpack.io")
+    }
+}
+
+dependencies {
+    implementation 'com.google.protobuf:protobuf-java:3.15.3'
+    implementation "org.apache.avro:avro:1.10.0"
+    implementation "com.google.protobuf:protobuf-java:3.11.4"
+
+    implementation 'org.apache.kafka:kafka-streams:2.7.0'
+    implementation 'io.confluent:kafka-streams-avro-serde:6.1.0'
+    implementation 'io.confluent:kafka-streams-protobuf-serde:6.1.0'
+
+    implementation "io.confluent:kafka-avro-serializer:6.1.0"
+    implementation "io.confluent:kafka-protobuf-serializer:6.1.0"
+    implementation "io.confluent:kafka-schema-registry-client:6.1.0"
+    implementation "io.confluent:kafka-protobuf-provider:6.1.0"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+protobuf {
+    generatedFilesBaseDir = "${project.buildDir}/generated-main-proto-java"
+
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.15.3'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
