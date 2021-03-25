@@ -19,3 +19,5 @@ schema.registry.basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}
 avro.wrapped.topic=avro-events-wrapped
 avro.topic=avro-events
 proto.topic=proto-events
+streams.input.topic.name=avro-events
+streams.output.topic.name=output
