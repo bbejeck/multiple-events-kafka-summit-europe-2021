@@ -1,3 +1,6 @@
 docker-compose.yml
+build/
 .gradle/
 .idea/
+config-local.properties
+config.properties

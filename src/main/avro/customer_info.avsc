@@ -1,0 +1,16 @@
+{
+  "type":"record",
+  "namespace": "io.confluent.developer.avro",
+  "name":"CustomerInfo",
+  "fields": [
+    {"name": "customer_id", "type":  "string"},
+    {"name": "items", "type":
+    {"type": "array", "items": "string"},
+      "default": []
+    },
+    {"name": "page_views", "type":
+    {"type": "array", "items": "string"},
+    "default": []
+    }
+  ]
+}
