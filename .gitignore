@@ -4,3 +4,7 @@ build/
 .idea/
 config-local.properties
 config.properties
+
+ccloud_library.sh
+stack-configs/
+logs/

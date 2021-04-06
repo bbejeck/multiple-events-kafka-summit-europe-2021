@@ -1,4 +1,4 @@
-package utils;
+package io.confluent.developer.utils;
 
 import io.confluent.developer.avro.PageView;
 import io.confluent.developer.avro.Purchase;

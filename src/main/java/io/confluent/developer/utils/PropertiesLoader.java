@@ -1,4 +1,4 @@
-package utils;
+package io.confluent.developer.utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

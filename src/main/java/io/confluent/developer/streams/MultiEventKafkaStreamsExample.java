@@ -1,4 +1,4 @@
-package streams;
+package io.confluent.developer.streams;
 
 import io.confluent.developer.avro.CustomerInfo;
 import io.confluent.developer.avro.PageView;
@@ -17,7 +17,7 @@ import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
-import utils.PropertiesLoader;
+import io.confluent.developer.utils.PropertiesLoader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +25,11 @@ import java.util.Map;
 public class MultiEventKafkaStreamsExample {
 
     public static void main(String[] args) {
+        if (args.length < 1) {
+            System.out.println("Must provide path to properties file for configurations");
+            System.exit(1);
+        }
+
         var streamsProperties = PropertiesLoader.load(args[0]);
         var mapConfigs = new HashMap<String, Object>();
         streamsProperties.forEach((k, v) -> mapConfigs.put((String) k, v));
@@ -52,6 +57,7 @@ public class MultiEventKafkaStreamsExample {
 
         KafkaStreams kafkaStreams = new KafkaStreams(builder.build(), streamsProperties);
         kafkaStreams.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
     }
 
 

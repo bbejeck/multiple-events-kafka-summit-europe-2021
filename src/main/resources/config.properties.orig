@@ -1,7 +1,18 @@
 #Required for streams application
 application.id=
 
+#Topics
+# You'll need to create these three topics in Confluent Cloud
+avro.wrapped.topic=avro-events-wrapped
+avro.topic=avro-events
+proto.topic=proto-events
+# different property names for the streams application
+streams.input.topic.name=avro-events
+streams.output.topic.name=output
+
 # Required connection configs for Kafka producer, consumer, and admin
+# Delete everything below this line and then run `cat stack-configs/java-service-account* >> config.properties`
+
 bootstrap.servers={{ BROKER_ENDPOINT }}
 security.protocol=SASL_SSL
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='{{ CLUSTER_API_KEY }}' password='{{ CLUSTER_API_SECRET }}';
@@ -15,9 +26,4 @@ schema.registry.url=https://{{ SR_ENDPOINT }}
 basic.auth.credentials.source=USER_INFO
 schema.registry.basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}
 
-#Topics
-avro.wrapped.topic=avro-events-wrapped
-avro.topic=avro-events
-proto.topic=proto-events
-streams.input.topic.name=avro-events
-streams.output.topic.name=output
+

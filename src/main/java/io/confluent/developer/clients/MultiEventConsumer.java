@@ -1,4 +1,4 @@
-package clients;
+package io.confluent.developer.clients;
 
 import io.confluent.developer.avro.CustomerEvent;
 import io.confluent.developer.avro.PageView;
@@ -8,14 +8,13 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializerConfig;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import utils.PropertiesLoader;
+import io.confluent.developer.utils.PropertiesLoader;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -51,9 +50,7 @@ public class MultiEventConsumer {
             final String topicName = (String) consumerConfigs.get("avro.topic");
             unwrappedConsumer.subscribe(Collections.singletonList(topicName));
             ConsumerRecords<String, SpecificRecord> records = unwrappedConsumer.poll(Duration.ofSeconds(5));
-            records.forEach(record -> {
-                handleAvroRecord(record.value());
-            });
+            records.forEach(record -> handleAvroRecord(record.value()));
         }
     }
 
@@ -68,6 +65,7 @@ public class MultiEventConsumer {
             ConsumerRecords<String, CustomerEvent> records = specificConsumer.poll(Duration.ofSeconds(5));
             records.forEach(record -> {
                 final CustomerEvent customerEvent = record.value();
+                System.out.printf("[Avro] Found a CustomerRecord event %s %n", customerEvent);
                 SpecificRecord action = (SpecificRecord) customerEvent.getAction();
                 handleAvroRecord(action);
             });
@@ -77,10 +75,10 @@ public class MultiEventConsumer {
     private static void handleAvroRecord(final SpecificRecord avroRecord) {
         if (avroRecord instanceof PageView) {
             PageView pageView = (PageView) avroRecord;
-            System.out.printf("Found an embedded PageView event %s %n", pageView);
+            System.out.printf("[Avro] Found an embedded PageView event %s %n", pageView);
         } else if (avroRecord instanceof Purchase) {
             Purchase purchase = (Purchase) avroRecord;
-            System.out.printf("Found an embedded Purchase event %s %n", purchase);
+            System.out.printf("[Avro] Found an Avro embedded Purchase event %s %n", purchase);
         } else {
             throw new IllegalStateException(String.format("Unrecognized type %s %n", avroRecord.getSchema().getFullName()));
         }
@@ -99,9 +97,15 @@ public class MultiEventConsumer {
                 final CustomerEventProto.CustomerEvent customerEvent = record.value();
                 CustomerEventProto.CustomerEvent.ActionCase actionCase = customerEvent.getActionCase();
                 switch (actionCase) {
-                    case PURCHASE -> System.out.printf("Found a Purchase %s %n", customerEvent.getPurchase());
-                    case PAGE_VIEW -> System.out.printf("Found a PageView %s %n", customerEvent.getPageView());
-                    case ACTION_NOT_SET -> System.out.println("Customer action not set");
+                    case PURCHASE:
+                        System.out.printf("[Protobuf] Found a Purchase %s %n", customerEvent.getPurchase());
+                        break;
+                    case PAGE_VIEW:
+                        System.out.printf("[Protobuf] Found a PageView %s %n", customerEvent.getPageView());
+                        break;
+                    case ACTION_NOT_SET:
+                        System.out.println("[Protobuf] Customer action not set");
+                        break;
                 }
             });
         }

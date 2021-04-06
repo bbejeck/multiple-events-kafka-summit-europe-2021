@@ -1,4 +1,4 @@
-package clients;
+package io.confluent.developer.clients;
 
 import io.confluent.developer.avro.CustomerEvent;
 import io.confluent.developer.avro.PageView;
@@ -15,8 +15,8 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
-import utils.Data;
-import utils.PropertiesLoader;
+import io.confluent.developer.utils.Data;
+import io.confluent.developer.utils.PropertiesLoader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
