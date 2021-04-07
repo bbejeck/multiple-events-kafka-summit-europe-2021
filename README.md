@@ -15,7 +15,8 @@ Table of Contents
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
-#Multiple Events in one topic
+# Multiple Events in one topic
+
 ### This is the code repo containing examples from the "Multiple Events in one topic" presentation at the Kafka Summit-Europe 2021
 
 
