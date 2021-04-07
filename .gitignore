@@ -9,3 +9,4 @@ ccloud_library.sh
 stack-configs/
 logs/
 scratch.txt
+build.gradle
