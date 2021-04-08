@@ -5,13 +5,12 @@ Table of Contents
       * [1. Confluent prerequisites](#1-confluent-prerequisites)
       * [2. Setting up Kafka Brokers and Schema Registry](#2-setting-up-kafka-brokers-and-schema-registry)
       * [3. Configure the properties](#3-configure-the-properties)
-      * [4. Configure the Schema Registry Plugin](#4-configure-the-schema-registry-plugin)
-      * [5. Create topics](#5-create-topics)
-      * [6. Register Schemas](#6-register-schemas)
-      * [7. Produce different event types to single topic](#7-produce-different-event-types-to-single-topic)
-      * [8. Consuming records from multi-event topics](#8-consuming-records-from-multi-event-topics)
-      * [9. Kafka Streams sample application](#8-kafka-streams-sample-application)
-      * [10. CLEAN UP](#9-clean-up)
+      * [4. Create topics](#4-create-topics)
+      * [5. Register Schemas](#5-register-schemas)
+      * [6. Produce different event types to single topic](#6-produce-different-event-types-to-single-topic)
+      * [7. Consuming records from multi-event topics](#7-consuming-records-from-multi-event-topics)
+      * [8. Kafka Streams sample application](#8-kafka-streams-sample-application)
+      * [9. CLEAN UP](#9-clean-up)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -79,7 +78,7 @@ brokers and Schema Registry on Confluent.
 #### 3. Configure the properties
 
 To get started running any code you'll need to configure the required properties. In the `src/main/resources` directory 
-you'll find a file named `config.properties.orig`, creata a copy of that file and rename it to `config.properties`.  
+you'll find a file named `config.properties.orig`, create a copy of that file and rename it to `config.properties`.  
 The project configured Git to ignore the `config.properties`
 file as it contains the key and password that the code will use to interact with the broker and Schema Registry on Confluent.  
 So this file should _*never get checked in*_!
@@ -88,32 +87,10 @@ After making a copy and renaming the config file run this command:
 ```
 cat stack-configs/java-service-account-*.config >> src/main/resources/config.properties
 ```
-  
-#### 4. Configure the Schema Registry Plugin
+_NOTE:_ It's important that you complete this step as directed step number 5 relies on having the `src/main/resources/config.properties`
+properly set-up.
 
-Next make a copy of `build.gradle.orig` and rename the copy to `build.gradle`, we do this as we use the Schema Registry username and 
-password in the [SR Gradle Plugin](https://github.com/ImFlog/schema-registry-plugin) and we want to make sure we don't share any of this
-information by accidentally checking in a file.
-
-Now open the `build.gradle` file and find this section:
-```groovy
-schemaRegistry {
-    // set the url to schema.registry.url property
-    url = ''
-
-    credentials {
-        // username is the characters up to the ':' in the basic.auth.user.info property
-        username = ''
-        // password is everything after ':' in the basic.auth.user.info property
-        password = ''
-    }
-    // Details left out for clarity
-}
-```
-
-Follow the directions in the comments for setting up access to Schema Registry in Confluent.
-
-#### 5. Create topics
+#### 4. Create topics
 
 Now you need to create topics for the examples to use.  Using the properties you've copied over in a previous step,
 run this gradle command:
@@ -132,7 +109,7 @@ that uses the [Admin](https://kafka.apache.org/27/javadoc/org/apache/kafka/clien
 on your brokers in Confluent.  You can log into Confluent now and inspect the topics through the UI now.   Keep the Confluent
 UI open as you'll need it in the next step.
 
-#### 6. Register Schemas
+#### 5. Register Schemas
 Next you'll need to register some schemas.  If you recall from the presentation, when you have an Avro schema where the 
 top level element is a `union` you need to register the individual schemas in the union first.  
 Then you'll register the container schema itself along with references to the schemas making up the union element.
@@ -153,6 +130,9 @@ Now to register these schemas, run this in the command line:
 ./gradlew registerSchemasTask
 ```
 
+Under the covers, the `registerSchemasTask` uses the `config.properties` file to set the
+Schema Registry endpoint, username, and password on Confluent.
+
 This task runs quickly, and you should see some text followed by this result in the console:
 ```
 Build Successful
@@ -164,7 +144,7 @@ wrap the `union`, you've already registered the referenced schemas, and we can u
 Using the Confluent UI you opened in the previous step, you can view the uploaded schemas by clicking in the `Schema Registry`
 tab and click on the individual schemas to inspect them.
 
-#### 7. Produce different event types to single topic
+#### 6. Produce different event types to single topic
 
 Now let's produce some records to Confluent brokers.  The `io.confluent.developer.clients.DataProducer` class runs three 
 `KafkaProducer` clients serially, producing records to the `avro-events`, `avro-wrapped-events`, and `proto-event` topics.
@@ -176,7 +156,7 @@ To produce the records, run this command:
 ```
 You should see a few statements as each producer sends records to the Confluent brokers
 
-#### 8. Consuming records from multi-event topics
+#### 7. Consuming records from multi-event topics
 
 Next, let's take a look at the `io.confluent.developer.clients.MultiEventConsumer` class.  The `MultiEventConsumer` runs three
 `KafkaConsumer` instances, serially, and prints some details about the consumed records to the console.  The point of this
@@ -188,7 +168,7 @@ To run the consumer execute:
 ```
 Then you should see some details about each record in the console
 
-#### 9. Kafka Streams sample application
+#### 8. Kafka Streams sample application
 Last, but not least, we have a basic Kafka Streams application demonstrating one possible approach to 
 handling multiple event types from a topic.
 
@@ -204,7 +184,7 @@ To run the streams application use this command:
 After a few seconds, you'll see some details on the console about the new `CustomerInfo` record created by extracting
 fields from the different event types coming from the source topic.
 
-#### 10. CLEAN UP
+#### 9. CLEAN UP
 
 This concludes the demo from the presentation.  Please stick around and view the code and schema files. Play around and experiment
 some to get a feel for working with schema references and multi-event topics.

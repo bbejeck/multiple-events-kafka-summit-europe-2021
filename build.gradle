@@ -39,7 +39,7 @@ repositories {
 dependencies {
     implementation 'com.google.protobuf:protobuf-java:3.15.3'
     implementation "org.apache.avro:avro:1.10.0"
-    
+
     implementation "org.apache.logging.log4j:log4j-api:2.7"
     implementation "org.apache.logging.log4j:log4j-core:2.7"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.7"
@@ -61,15 +61,21 @@ protobuf {
     }
 }
 
+
 schemaRegistry {
-    // set the url to schema.registry.url property
-    url = ''
+    def props = new Properties()
+    file("src/main/resources/config.properties").withInputStream {props.load(it)}
+    def srUrl = props.getProperty("schema.registry.url")
+    def auth =  props.getProperty("basic.auth.user.info").split(":")
+    //println "Using Schema Registry endpoint:${srUrl}, username:${auth[0]},password:${auth[1]}"
+
+    url = srUrl
 
     credentials {
         // username is the characters up to the ':' in the basic.auth.user.info property
-        username = ''
+        username = auth[0]
         // password is everything after ':' in the basic.auth.user.info property
-        password = ''
+        password = auth[1]
     }
 
 
