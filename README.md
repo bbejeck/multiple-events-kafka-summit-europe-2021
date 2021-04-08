@@ -41,8 +41,7 @@ Run this command to get `ccloud_library.sh`:
 With that done, let's create the stack of Confluent resources:
 
 ```
-CLUSTER_CLOUD=aws
-CLUSTER_REGION=us-west-2
+EXAMPLE=schema-registry-kafka-summit-2021-emea
 ccloud::create_ccloud_stack
 ```
 
@@ -78,15 +77,21 @@ brokers and Schema Registry on Confluent.
 #### 3. Configure the properties
 
 To get started running any code you'll need to configure the required properties. In the `src/main/resources` directory 
-you'll find a file named `config.properties.orig`, create a copy of that file and rename it to `config.properties`.  
-The project configured Git to ignore the `config.properties`
-file as it contains the key and password that the code will use to interact with the broker and Schema Registry on Confluent.  
-So this file should _*never get checked in*_!
+you'll find a file named `config.properties.orig` that contains some required configuration settings.
 
-After making a copy and renaming the config file run this command:
+Run this command to make a copy of the file:
+```
+cat src/main/resources/config.properties.orig > src/main/resources/config.properties
+```
+Then run this command to get the required Confluent configurations into the properties files:
 ```
 cat stack-configs/java-service-account-*.config >> src/main/resources/config.properties
 ```
+
+We need to take this step as the configuration file contains the key and password that the code will use to 
+interact with the broker and Schema Registry on Confluent.  
+As a result this repo ignores the `config.properties` file, so it should _*never get checked in*_!
+
 _NOTE:_ It's important that you complete this step as directed step number 5 relies on having the `src/main/resources/config.properties`
 properly set-up.
 
@@ -182,7 +187,8 @@ To run the streams application use this command:
 ```
 
 After a few seconds, you'll see some details on the console about the new `CustomerInfo` record created by extracting
-fields from the different event types coming from the source topic.
+fields from the different event types coming from the source topic.  After you see the print statements on the console, 
+enter a `CTRL+C` to stop the streams application.
 
 #### 9. CLEAN UP
 
