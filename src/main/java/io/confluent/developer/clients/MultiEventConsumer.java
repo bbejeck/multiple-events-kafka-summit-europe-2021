@@ -4,8 +4,11 @@ import io.confluent.developer.avro.CustomerEvent;
 import io.confluent.developer.avro.PageView;
 import io.confluent.developer.avro.Purchase;
 import io.confluent.developer.proto.CustomerEventProto;
+import io.confluent.developer.utils.PropertiesLoader;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer;
+import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializerConfig;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializerConfig;
 import org.apache.avro.specific.SpecificRecord;
@@ -14,7 +17,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import io.confluent.developer.utils.PropertiesLoader;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -38,6 +40,7 @@ public class MultiEventConsumer {
         consumeAvroUnwrappedRecords(consumerConfigs);
         consumeAvroSpecificRecords(consumerConfigs);
         consumeProtobufRecords(consumerConfigs);
+        consumeJsonSchemaRecords(consumerConfigs);
 
     }
 
@@ -69,6 +72,31 @@ public class MultiEventConsumer {
                 SpecificRecord action = (SpecificRecord) customerEvent.getAction();
                 handleAvroRecord(action);
             });
+        }
+    }
+
+    static void consumeJsonSchemaRecords(final Map<String, Object> baseConfigs) {
+        var consumerConfigs = new HashMap<>(baseConfigs);
+        consumerConfigs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaJsonSchemaDeserializer.class);
+        consumerConfigs.put(KafkaJsonSchemaDeserializerConfig.TYPE_PROPERTY, "javaTypeName");
+        consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, "json-schema-group");
+        try (final Consumer<String, Object> jsonSchemaConsumer = new KafkaConsumer<>(consumerConfigs)) {
+            final String topicName = (String) consumerConfigs.get("json.topic");
+            jsonSchemaConsumer.subscribe(Collections.singletonList(topicName));
+            ConsumerRecords<String, Object> records = jsonSchemaConsumer.poll(Duration.ofSeconds(5));
+            records.forEach(jsonSchemaRecord -> handleJsonSchemaRecord(jsonSchemaRecord.value()));
+        }
+    }
+
+    private static void handleJsonSchemaRecord(final Object jsonSchemaRecord) {
+        if (jsonSchemaRecord instanceof io.confluent.developer.json.PageView) {
+            io.confluent.developer.json.PageView pageView = (io.confluent.developer.json.PageView) jsonSchemaRecord;
+            System.out.printf("[JSON Schema] Found a PageView event %s %n", pageView);
+        } else if (jsonSchemaRecord instanceof io.confluent.developer.json.Purchase) {
+            io.confluent.developer.json.Purchase purchase = (io.confluent.developer.json.Purchase) jsonSchemaRecord;
+            System.out.printf("[JSON Schema] Found a Purchase event %s %n", purchase);
+        } else {
+            throw new IllegalStateException(String.format("Unrecognized type %s %n", jsonSchemaRecord.toString()));
         }
     }
 

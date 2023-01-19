@@ -24,6 +24,20 @@ public class Data {
                 .build();
     }
 
+    public static io.confluent.developer.json.Purchase jsonSchemaPurchase() {
+        return new io.confluent.developer.json.Purchase()
+                .withAmount(437.83)
+                .withCustomerId("vandelay1234")
+                .withItem("flux-capacitor");
+    }
+
+    public static io.confluent.developer.json.PageView jsonSchemaPageView() {
+        return new io.confluent.developer.json.PageView()
+                .withCustomerId("vandelay1234")
+                .withIsSpecial(true)
+                .withUrl("https://acme.commerce/sale");
+    }
+
     public static PageViewProto.PageView protoPageView() {
         return PageViewProto.PageView.newBuilder()
                 .setCustomerId("vandelay1234")
