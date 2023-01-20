@@ -20,6 +20,7 @@ plugins {
     id "com.google.protobuf" version "0.8.15"
     id "com.github.imflog.kafka-schema-registry-gradle-plugin" version "1.1.1"
     id "com.github.davidmc24.gradle.plugin.avro" version "1.0.0"
+    id 'com.github.eirnym.js2p' version '1.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -37,20 +38,22 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.protobuf:protobuf-java:3.15.3'
+    implementation 'com.google.protobuf:protobuf-java:3.16.3'
     implementation "org.apache.avro:avro:1.10.0"
 
-    implementation "org.apache.logging.log4j:log4j-api:2.7"
-    implementation "org.apache.logging.log4j:log4j-core:2.7"
-    implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.7"
+    implementation "org.apache.logging.log4j:log4j-api:2.12.4"
+    implementation 'org.apache.logging.log4j:log4j-core:2.12.4'
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.12.4"
 
-    implementation 'org.apache.kafka:kafka-streams:2.7.0'
-    implementation 'io.confluent:kafka-streams-avro-serde:6.1.0'
-    implementation 'io.confluent:kafka-streams-protobuf-serde:6.1.0'
+    implementation 'org.apache.kafka:kafka-streams:3.3.1'
+    implementation 'io.confluent:kafka-streams-avro-serde:7.3.1'
+    implementation 'io.confluent:kafka-streams-protobuf-serde:7.3.1'
+    implementation 'io.confluent:kafka-streams-json-schema-serde:7.3.1'
 
-    implementation "io.confluent:kafka-avro-serializer:6.1.0"
-    implementation "io.confluent:kafka-protobuf-serializer:6.1.0"
-    implementation "io.confluent:kafka-protobuf-provider:6.1.0"
+    implementation "io.confluent:kafka-avro-serializer:7.3.1"
+    implementation "io.confluent:kafka-protobuf-serializer:7.3.1"
+    implementation "io.confluent:kafka-json-schema-serializer:7.3.1"
+    implementation "io.confluent:kafka-protobuf-provider:7.3.1"
 }
 
 protobuf {
@@ -61,13 +64,23 @@ protobuf {
     }
 }
 
+jsonSchema2Pojo {
+    targetPackage = 'io.confluent.developer.json'
+    generateBuilders = true
+    annotationStyle = "JACKSON2"
+    source = files("${project.projectDir}/src/main/json")
+    targetDirectory = file("${project.buildDir}/generated-main-json-java")
+    includeJsr303Annotations = false
+    propertyWordDelimiters = ['_'] as char[]
+}
+
 
 schemaRegistry {
     def props = new Properties()
     file("src/main/resources/config.properties").withInputStream {props.load(it)}
     def srUrl = props.getProperty("schema.registry.url")
     def auth =  props.getProperty("basic.auth.user.info").split(":")
-    //println "Using Schema Registry endpoint:${srUrl}, username:${auth[0]},password:${auth[1]}"
+    println "Using Schema Registry endpoint:${srUrl}, username:${auth[0]},password:${auth[1]}"
 
     url = srUrl
 
@@ -86,6 +99,12 @@ schemaRegistry {
         subject('avro-events-value', 'src/main/avro/all_events.avsc', 'AVRO')
                 .addReference("io.confluent.developer.avro.PageView", "page-view", 1)
                 .addReference("io.confluent.developer.avro.Purchase", "purchase", 1)
+
+        subject('json-page-view', 'src/main/json/page_view.schema.json', 'JSON')
+        subject('json-purchase', 'src/main/json/purchase.schema.json', 'JSON')
+        subject('json-events-value', 'src/main/json/all_events.schema.json', 'JSON')
+                .addReference("page_view.schema.json", "json-page-view", 3)
+                .addReference("purchase.schema.json", "json-purchase", 2)
     }
 
 }

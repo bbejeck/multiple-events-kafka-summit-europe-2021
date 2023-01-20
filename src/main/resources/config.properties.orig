@@ -6,6 +6,7 @@ application.id=streams-multi-event-app
 avro.wrapped.topic=avro-events-wrapped
 avro.topic=avro-events
 proto.topic=proto-events
+json.topic=json-events
 # different property names for the streams application
 streams.input.topic.name=avro-events
 streams.output.topic.name=output

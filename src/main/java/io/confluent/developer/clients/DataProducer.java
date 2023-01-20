@@ -8,6 +8,9 @@ import io.confluent.developer.proto.PageViewProto;
 import io.confluent.developer.proto.PurchaseProto;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializerConfig;
+import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
+import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializerConfig;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -42,7 +45,8 @@ public class DataProducer {
         produceAvro(producerConfigs);
         System.out.println("Producing records to Proto multi-event topic");
         produceProtobuf(producerConfigs);
-
+        System.out.println("Producing records to JSON Schema multi-event topic");
+        produceJsonSchema(producerConfigs);
 
     }
 
@@ -109,6 +113,32 @@ public class DataProducer {
                     System.err.printf("Producing %s resulted in error %s", event, exception);
                 }
             })));
+        }
+    }
+
+    private static void produceJsonSchema(final Map<String, Object> originalConfigs) {
+        Map<String, Object> producerConfigs = new HashMap<>(originalConfigs);
+        producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaJsonSchemaSerializer.class);
+        producerConfigs.put(KafkaJsonSchemaSerializerConfig.AUTO_REGISTER_SCHEMAS, false);
+        producerConfigs.put(KafkaJsonSchemaSerializerConfig.USE_LATEST_VERSION, true);
+        producerConfigs.put(KafkaJsonSchemaSerializerConfig.LATEST_COMPATIBILITY_STRICT, false);
+
+        try (final Producer<String, Object> producer = new KafkaProducer<>(producerConfigs)) {
+            String topic = (String) producerConfigs.get("json.topic");
+            io.confluent.developer.json.Purchase purchase = Data.jsonSchemaPurchase();
+            io.confluent.developer.json.PageView pageView = Data.jsonSchemaPageView();
+
+            producer.send(new ProducerRecord<>(topic, purchase.getCustomerId(), purchase), ((metadata, exception) -> {
+                if (exception != null) {
+                    System.err.printf("Producing %s resulted in error %s", purchase, exception);
+                }
+            }));
+
+            producer.send(new ProducerRecord<>(topic, pageView.getCustomerId(), pageView), ((metadata, exception) -> {
+                if (exception != null) {
+                    System.err.printf("Producing %s resulted in error %s", pageView, exception);
+                }
+            }));
         }
     }
 }
