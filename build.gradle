@@ -100,11 +100,11 @@ schemaRegistry {
                 .addReference("io.confluent.developer.avro.PageView", "page-view", 1)
                 .addReference("io.confluent.developer.avro.Purchase", "purchase", 1)
 
-        subject('json-page-view', 'src/main/json/page_view.schema.json', 'JSON')
-        subject('json-purchase', 'src/main/json/purchase.schema.json', 'JSON')
-        subject('json-events-value', 'src/main/json/all_events.schema.json', 'JSON')
-                .addReference("page_view.schema.json", "json-page-view", 3)
-                .addReference("purchase.schema.json", "json-purchase", 2)
+        subject('json-page-view', 'src/main/json/page_view.json', 'JSON')
+        subject('json-purchase', 'src/main/json/purchase.json', 'JSON')
+        subject('json-events-value', 'src/main/json/all_events.json', 'JSON')
+                .addReference("page_view.json", "json-page-view", 1)
+                .addReference("purchase.json", "json-purchase", 1)
     }
 
 }

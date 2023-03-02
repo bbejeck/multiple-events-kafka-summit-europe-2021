@@ -3,7 +3,7 @@
   "title": "Schema references",
   "description": "List of schema references for multiple types in a single topic",
   "oneOf": [
-    { "$ref": "page_view.schema.json" },
-    { "$ref": "purchase.schema.json"}
+    { "$ref": "page_view.json" },
+    { "$ref": "purchase.json"}
   ]
 }
