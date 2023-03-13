@@ -78,7 +78,7 @@ public class MultiEventConsumer {
     static void consumeJsonSchemaRecords(final Map<String, Object> baseConfigs) {
         var consumerConfigs = new HashMap<>(baseConfigs);
         consumerConfigs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaJsonSchemaDeserializer.class);
-        consumerConfigs.put(KafkaJsonSchemaDeserializerConfig.TYPE_PROPERTY, "javaTypeName");
+        consumerConfigs.put(KafkaJsonSchemaDeserializerConfig.TYPE_PROPERTY, "javaType");
         consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, "json-schema-group");
         try (final Consumer<String, Object> jsonSchemaConsumer = new KafkaConsumer<>(consumerConfigs)) {
             final String topicName = (String) consumerConfigs.get("json.topic");
@@ -96,7 +96,7 @@ public class MultiEventConsumer {
             io.confluent.developer.json.Purchase purchase = (io.confluent.developer.json.Purchase) jsonSchemaRecord;
             System.out.printf("[JSON Schema] Found a Purchase event %s %n", purchase);
         } else {
-            throw new IllegalStateException(String.format("Unrecognized type %s %n", jsonSchemaRecord.toString()));
+            System.out.printf("[JSON Schema] !!!! Unrecognized type %s %n%n", jsonSchemaRecord.toString());
         }
     }
 
