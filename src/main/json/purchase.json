@@ -3,7 +3,7 @@
   "title": "CustomerEvent",
   "description": "A JSON schema Purchase object",
   "type": "object",
-  "javaTypeName": "io.confluent.developer.json.Purchase",
+  "javaTypeName" : "io.confluent.developer.json.Purchase",
   "properties": {
     "item": {
       "type": "string"

@@ -78,7 +78,7 @@ public class MultiEventConsumer {
     static void consumeJsonSchemaRecords(final Map<String, Object> baseConfigs) {
         var consumerConfigs = new HashMap<>(baseConfigs);
         consumerConfigs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaJsonSchemaDeserializer.class);
-        consumerConfigs.put(KafkaJsonSchemaDeserializerConfig.TYPE_PROPERTY, "javaType");
+        consumerConfigs.put(KafkaJsonSchemaDeserializerConfig.TYPE_PROPERTY, "javaTypeName");
         consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, "json-schema-group");
         try (final Consumer<String, Object> jsonSchemaConsumer = new KafkaConsumer<>(consumerConfigs)) {
             final String topicName = (String) consumerConfigs.get("json.topic");
