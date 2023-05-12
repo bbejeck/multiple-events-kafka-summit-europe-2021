@@ -9,4 +9,7 @@ ccloud_library.sh
 stack-configs/
 logs/
 scratch.txt
+cluster-api-keys*
+java_configs_*
+sr-api-keys-*
 
