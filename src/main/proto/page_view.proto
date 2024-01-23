@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package io.confluent.developer.proto;
 option java_outer_classname = "PageViewProto";
+option java_multiple_files = true;
+
 
 message PageView {
   string url = 1;

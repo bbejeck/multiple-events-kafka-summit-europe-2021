@@ -3,12 +3,10 @@ package io.confluent.developer.clients;
 import io.confluent.developer.avro.CustomerEvent;
 import io.confluent.developer.avro.PageView;
 import io.confluent.developer.avro.Purchase;
-import io.confluent.developer.proto.CustomerEventProto;
-import io.confluent.developer.proto.PageViewProto;
-import io.confluent.developer.proto.PurchaseProto;
+import io.confluent.developer.utils.Data;
+import io.confluent.developer.utils.PropertiesLoader;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
-import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializerConfig;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializerConfig;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
@@ -18,8 +16,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
-import io.confluent.developer.utils.Data;
-import io.confluent.developer.utils.PropertiesLoader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,17 +50,18 @@ public class DataProducer {
         Map<String, Object> producerConfigs = new HashMap<>(originalConfigs);
         producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaProtobufSerializer.class);
 
-        try (final Producer<String, CustomerEventProto.CustomerEvent> producer = new KafkaProducer<>(producerConfigs)) {
+        try (final Producer<String, CustomerEvent> producer = new KafkaProducer<>(producerConfigs)) {
             String topic = (String) producerConfigs.get("proto.topic");
-            List<CustomerEventProto.CustomerEvent> events = new ArrayList<>();
-            PurchaseProto.Purchase purchase = Data.protoPurchase();
-            PageViewProto.PageView pageView = Data.protoPageView();
+            List<CustomerEvent> events = new ArrayList<>();
+            Purchase purchase = Data.protoPurchase();
+            PageView pageView = Data.protoPageView();
 
-            CustomerEventProto.CustomerEvent.Builder builder = CustomerEventProto.CustomerEvent.newBuilder();
-            builder.setPurchase(purchase).setId(purchase.getCustomerId());
+            CustomerEvent.Builder builder = CustomerEvent.newBuilder();
+            builder.setAction(purchase).setId(purchase.getCustomerId());
             events.add(builder.build());
-            builder.clear();
-            builder.setPageView(pageView).setId(pageView.getCustomerId());
+            builder.clearAction();
+            builder.clearId();
+            builder.setAction(pageView).setId(pageView.getCustomerId());
             events.add(builder.build());
             events.forEach(event -> producer.send(new ProducerRecord<>(topic, event.getId(), event), ((metadata, exception) -> {
                 if (exception != null) {

@@ -6,6 +6,7 @@ import "purchase.proto";
 import "page_view.proto";
 
 option java_outer_classname = "CustomerEventProto";
+option java_multiple_files = true;
 
 message CustomerEvent {
 

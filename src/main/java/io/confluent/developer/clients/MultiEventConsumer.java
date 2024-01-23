@@ -3,7 +3,7 @@ package io.confluent.developer.clients;
 import io.confluent.developer.avro.CustomerEvent;
 import io.confluent.developer.avro.PageView;
 import io.confluent.developer.avro.Purchase;
-import io.confluent.developer.proto.CustomerEventProto;
+import io.confluent.developer.proto.CustomerEventOrBuilder;
 import io.confluent.developer.utils.PropertiesLoader;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
@@ -22,6 +22,8 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static io.confluent.developer.proto.CustomerEvent.ActionCase.*;
 
 public class MultiEventConsumer {
 
@@ -115,21 +117,21 @@ public class MultiEventConsumer {
     static void consumeProtobufRecords(final Map<String, Object> baseConfigs) {
         var consumerConfigs = new HashMap<>(baseConfigs);
         consumerConfigs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaProtobufDeserializer.class);
-        consumerConfigs.put(KafkaProtobufDeserializerConfig.SPECIFIC_PROTOBUF_VALUE_TYPE, CustomerEventProto.CustomerEvent.class);
+        consumerConfigs.put(KafkaProtobufDeserializerConfig.SPECIFIC_PROTOBUF_VALUE_TYPE, CustomerEvent.class);
         consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, "proto-group");
-        try (final Consumer<String, CustomerEventProto.CustomerEvent> protoConsumer = new KafkaConsumer<>(consumerConfigs)) {
+        try (final Consumer<String, CustomerEvent> protoConsumer = new KafkaConsumer<>(consumerConfigs)) {
             final String topicName = (String) consumerConfigs.get("proto.topic");
             protoConsumer.subscribe(Collections.singletonList(topicName));
-            ConsumerRecords<String, CustomerEventProto.CustomerEvent> records = protoConsumer.poll(Duration.ofSeconds(5));
+            ConsumerRecords<String, CustomerEvent> records = protoConsumer.poll(Duration.ofSeconds(5));
             records.forEach(record -> {
-                final CustomerEventProto.CustomerEvent customerEvent = record.value();
-                CustomerEventProto.CustomerEvent.ActionCase actionCase = customerEvent.getActionCase();
+                final CustomerEvent customerEvent = record.value();
+                io.confluent.developer.proto.CustomerEvent.ActionCase actionCase = ((CustomerEventOrBuilder)customerEvent).getActionCase();
                 switch (actionCase) {
                     case PURCHASE:
-                        System.out.printf("[Protobuf] Found a Purchase %s %n", customerEvent.getPurchase());
+                        System.out.printf("[Protobuf] Found a Purchase %s %n", customerEvent.getAction());
                         break;
                     case PAGE_VIEW:
-                        System.out.printf("[Protobuf] Found a PageView %s %n", customerEvent.getPageView());
+                        System.out.printf("[Protobuf] Found a PageView %s %n", customerEvent.getAction());
                         break;
                     case ACTION_NOT_SET:
                         System.out.println("[Protobuf] Customer action not set");
