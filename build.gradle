@@ -77,7 +77,7 @@ jsonSchema2Pojo {
     generateBuilders = true
     annotationStyle = "JACKSON2"
     source = files("${project.projectDir}/src/main/json")
-    targetDirectory = file("${project.buildDir}/generated-main-json-java")
+    targetDirectory = file("${project.layout.buildDirectory}/generated-main-json-java")
     includeJsr303Annotations = false
     propertyWordDelimiters = ['_'] as char[]
 }
