@@ -20,8 +20,10 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class MultiEventKafkaStreamsExample {
 
@@ -56,9 +58,14 @@ public class MultiEventKafkaStreamsExample {
                 .peek((k, v) -> System.out.printf("Customer info %s %n", v))
                 .to(outputTopic, Produced.with(Serdes.String(), customerSerde));
 
-        KafkaStreams kafkaStreams = new KafkaStreams(builder.build(), streamsProperties);
-        kafkaStreams.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close));
+        try (KafkaStreams kafkaStreams = new KafkaStreams(builder.build(), streamsProperties)) {
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> kafkaStreams.close(Duration.ofSeconds(5))));
+            kafkaStreams.start();
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+             Thread.currentThread().interrupt();
+        }
     }
 
 
@@ -105,11 +112,6 @@ public class MultiEventKafkaStreamsExample {
                     }
                     store.put(readOnlyKey, customerInfo);
                     context.forward(fixedKeyRecord.withValue(customerInfo));
-                }
-
-                @Override
-                public void close() {
-
                 }
             };
         }
