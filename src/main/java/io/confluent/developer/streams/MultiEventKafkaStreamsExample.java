@@ -3,6 +3,7 @@ package io.confluent.developer.streams;
 import io.confluent.developer.avro.CustomerInfo;
 import io.confluent.developer.avro.PageView;
 import io.confluent.developer.avro.Purchase;
+import io.confluent.developer.utils.PropertiesLoader;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.common.serialization.Serdes;
@@ -11,13 +12,13 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
-import org.apache.kafka.streams.kstream.ValueTransformerWithKeySupplier;
-import org.apache.kafka.streams.processor.ProcessorContext;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessorSupplier;
+import org.apache.kafka.streams.processor.api.FixedKeyRecord;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
-import io.confluent.developer.utils.PropertiesLoader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class MultiEventKafkaStreamsExample {
 
         builder.stream(inputTopic, Consumed.with(Serdes.String(), specificAvroSerde)
                 .withOffsetResetPolicy(Topology.AutoOffsetReset.EARLIEST))
-                .transformValues(new EventValueTransformerSupplier(storeName), storeName)
+                .processValues(new EventValueTransformerSupplier(storeName), storeName)
                 .peek((k, v) -> System.out.printf("Customer info %s %n", v))
                 .to(outputTopic, Produced.with(Serdes.String(), customerSerde));
 
@@ -68,7 +69,7 @@ public class MultiEventKafkaStreamsExample {
     }
 
 
-    static class EventValueTransformerSupplier implements ValueTransformerWithKeySupplier<String, SpecificRecord, CustomerInfo> {
+    static class EventValueTransformerSupplier implements FixedKeyProcessorSupplier<String, SpecificRecord, CustomerInfo> {
         private final String storename;
 
         public EventValueTransformerSupplier(String storename) {
@@ -76,16 +77,20 @@ public class MultiEventKafkaStreamsExample {
         }
 
         @Override
-        public ValueTransformerWithKey<String, SpecificRecord, CustomerInfo> get() {
-            return new ValueTransformerWithKey<>() {
+        public FixedKeyProcessor<String, SpecificRecord, CustomerInfo> get() {
+            return new FixedKeyProcessor<>() {
                 private KeyValueStore<String, CustomerInfo> store;
+                private FixedKeyProcessorContext<String,CustomerInfo> context;
                 @Override
-                public void init(ProcessorContext context) {
-                        store = context.getStateStore(storename);
+                public void init(FixedKeyProcessorContext<String, CustomerInfo> context) {
+                    store = context.getStateStore(storename);
+                    this.context = context;
                 }
 
                 @Override
-                public CustomerInfo transform(String readOnlyKey, SpecificRecord value) {
+                public void process(FixedKeyRecord<String, SpecificRecord> fixedKeyRecord) {
+                    String readOnlyKey = fixedKeyRecord.key();
+                    SpecificRecord value = fixedKeyRecord.value();
                     CustomerInfo customerInfo = store.get(readOnlyKey);
                     if (customerInfo == null) {
                         customerInfo = CustomerInfo.newBuilder().setCustomerId(readOnlyKey).build();
@@ -99,8 +104,7 @@ public class MultiEventKafkaStreamsExample {
                         customerInfo.getItems().add(purchase.getItem());
                     }
                     store.put(readOnlyKey, customerInfo);
-
-                    return customerInfo;
+                    context.forward(fixedKeyRecord.withValue(customerInfo));
                 }
 
                 @Override
